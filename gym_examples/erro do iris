@@ -1,0 +1,10 @@
+erro do iris
+
+
+
+taniel@N305-SP00950:~/anaconda3/envs/RL/lib$ mkdir backup
+taniel@N305-SP00950:~/anaconda3/envs/RL/lib$ mv libstd* backup
+taniel@N305-SP00950:~/anaconda3/envs/RL/lib$ cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6 ./
+taniel@N305-SP00950:~/anaconda3/envs/RL/lib$ ln -s libstdc++.so.6 libstdc++.so
+taniel@N305-SP00950:~/anaconda3/envs/RL/lib$ ln -s libstdc++.so.6 libstdc++.so.6.0.19
+
