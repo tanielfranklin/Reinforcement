@@ -49,6 +49,7 @@ class DQNAgent(nn.Module):
             for j2 in actions:
                 for j3 in actions:
                     actions_space.append([j1, j2, j3])
+        actions_space.pop(13) #remove [0,0,0]
         self.n_actions = len(actions_space)
         return actions_space
     
