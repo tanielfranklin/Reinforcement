@@ -102,18 +102,20 @@ class Panda_RL(object):
         next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
         info=["",""]
         done =False
-        joint_limits,reached_limits=self.reach_joint_limit(a)
-        #r,col=self.reward(d)
+        
         
         if self.detect_collision()[0]:
-            next_state=s
-            r=-1    
+            # next_state=s
+            # next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
+            r=-100
+            done=True
+            info=["Done","Collided"]    
         if self.distance()<0.01:
             done=True
             info=["Done","Completed"]
-            r=0
+            r=100
         else:
-            r=-1    
+            r=-2*self.distance() -20*(d-self.distance())   
         return next_state,r , done,info
     
     def reach_joint_limit(self):
