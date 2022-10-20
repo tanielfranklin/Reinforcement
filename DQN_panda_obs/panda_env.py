@@ -17,7 +17,6 @@ class Panda_RL(object):
         self.panda_end = rp.models.Panda()
         self.m=100 #magnification factor
         self.renderize=True
-        
         self.obstacle = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(0.3, 0, 0)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
         self.obs_floor = Cuboid([2., 2., 0.01], pose=sm.SE3(0, 0, 0), color=[100,100,100,0])#"black") #color=[100,100,100,0]
@@ -27,27 +26,42 @@ class Panda_RL(object):
         self.delta=delta
         #End joints positions
         j=[0.8,-1.5,1] 
-        self.q_end=[0., j[0], 0.,j[1], 0., j[2], 0.]
-        self.Tep = self.panda.fkine(self.q_end)
+        self.q_goal=[0., j[0], 0.,j[1], 0., j[2], 0.]
+        self.set_goal()
         self.f0=self.fitness()
-        # set end position
-        self.panda.q = self.q_end
-        # get goal position
-        self.p_goal=self.get_position()
+
         #set initial position
         self.panda.q = self.panda.qz
-        self.set_end_target(self.q_end)
-        
-        self.p_rob=self.get_position()
         self.d_1=self.distance()
-        
         self.mu_1=100
+        self.sig_p=1.
+        self.sig_R=1.
+        
+    def set_goal(self):
+        self.Tg=self.panda.fkine(self.q_goal)
+        self.Rg,self.Pg=self.get_RP(self.Tg)
+            
+        
+    def get_current_RP(self):
+        T=self.panda.fkine(self.panda.q)
+        R,P=self.get_RP(T)
+        return R,P
+            
+        
+    def get_RP(self,T):
+        R=np.array(T)[0:3,0:3]
+        P=np.array(T)[0:3,3:]    
+        return R,P
+    
+    def fitness(self):
+        R,P=self.get_current_RP()
+        return self.sig_p*self.distance()+self.sig_R*np.acos(((self.R@self.Rg.T).trace()-1)/2)
 
         
     def set_end_target(self,q):        
         #Add to workspace
-        Tep = self.panda.fkine(q)
-        axes=sg.Axes(length=0.1,pose=Tep)
+        Tg = self.panda.fkine(q)
+        axes=sg.Axes(length=0.1,pose=Tg)
         self.scene.add(axes)
         
         
@@ -162,11 +176,11 @@ class Panda_RL(object):
         return r       
         
     def fitness(self):
-        value=np.sum(np.array(self.panda.q-self.q_end)**2)
+        value=np.sum(np.array(self.panda.q-self.q_goal)**2)
         return value
     def distance(self):
         self.p_rob=self.get_position()
-        value=np.sum(np.array(self.p_rob-self.p_goal)**2)
+        value=np.sum(np.array(self.p_rob-self.Pg)**2)
         return value
         
     # def render(self, mode='human', close=False):
