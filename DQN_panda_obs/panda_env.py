@@ -10,7 +10,7 @@ import roboticstoolbox as rp
 from roboticstoolbox.tools.urdf.urdf import Collision
 class Panda_RL(object):
     
-    def __init__(self,delta=0.1):
+    def __init__(self,delta=0.01):
         self.scene = swift.Swift()
         self.scene.launch(realtime=True)
         self.panda = rp.models.Panda()
@@ -124,13 +124,13 @@ class Panda_RL(object):
         if self.detect_collision()[0]:
             # next_state=s
             # next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
-            r=-100
+            r=-500
             done=True
             info=["Done","Collided"]    
         if f_now<self.fg:
             done=True
             info=["Done","Completed"]
-            r=100
+            r=500
         else:
             r=self.reward(f_now)  
         return next_state,r , done,info
