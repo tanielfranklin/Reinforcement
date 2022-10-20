@@ -24,13 +24,11 @@ class DQNAgent(nn.Module):
         # a simple NN with state_dim as input vector (inout is state s)
         # and self.n_actions as output vector of logits of q(s, a)
         self.network = nn.Sequential()
-        self.network.add_module('layer1', nn.Linear(state_dim, 192))
+        self.network.add_module('layer1', nn.Linear(state_dim, 128))
         self.network.add_module('relu1', nn.ReLU())
-        self.network.add_module('layer2', nn.Linear(192, 256))
+        self.network.add_module('layer2', nn.Linear(128, 256))
         self.network.add_module('relu2', nn.ReLU())
-        self.network.add_module('layer3', nn.Linear(256, 64))
-        self.network.add_module('relu3', nn.ReLU())
-        self.network.add_module('layer4', nn.Linear(64, self.n_actions))
+        self.network.add_module('layer4', nn.Linear(256, self.n_actions))
         self.parameters = self.network.parameters
         
         self.get_action_index=lambda a: np.where((self.actions_space == a).all(axis=1))[0][0]
@@ -52,12 +50,6 @@ class DQNAgent(nn.Module):
         actions_space.pop(13) #remove [0,0,0]
         self.n_actions = len(actions_space)
         return actions_space
-    
-    
-
-        
-    
-    
 
     def get_qvalues(self, states):
         # input is an array of states in numpy and outout is Qvals as numpy array
