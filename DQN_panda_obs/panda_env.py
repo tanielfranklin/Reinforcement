@@ -15,7 +15,7 @@ class Panda_RL(object):
         self.scene.launch(realtime=True)
         self.panda = rp.models.Panda()
         self.panda_end = rp.models.Panda()
-        self.m=100 #magnification factor
+        self.mag=100 #magnification factor
         self.renderize=True
         self.obstacle = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(0.3, 0, 0)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
@@ -28,7 +28,8 @@ class Panda_RL(object):
         j=[0.8,-1.5,1] 
         self.q_goal=[0., j[0], 0.,j[1], 0., j[2], 0.]
         self.set_goal()
-        self.f0=self.fitness()
+        self.fg=0.001 
+        
 
         #set initial position
         self.panda.q = self.panda.qz
@@ -36,6 +37,8 @@ class Panda_RL(object):
         self.mu_1=100
         self.sig_p=1.
         self.sig_R=1.
+        self.set_end_target(self.q_goal)
+        self.f=self.fitness()
         
     def set_goal(self):
         self.Tg=self.panda.fkine(self.q_goal)
@@ -102,9 +105,6 @@ class Panda_RL(object):
         q=[1,3,5]
         return [self.panda.q[i] for i in q]
         
-        
-        
-        
     def step(self,a):
         #change joint angles by delta, do nothing or -delta
         #print(a)
@@ -119,7 +119,7 @@ class Panda_RL(object):
         next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
         info=["",""]
         done =False
-        
+        f_now=self.fitness()
         
         if self.detect_collision()[0]:
             # next_state=s
@@ -127,13 +127,14 @@ class Panda_RL(object):
             r=-100
             done=True
             info=["Done","Collided"]    
-        if self.distance()<0.005:
+        if f_now<self.fg:
             done=True
             info=["Done","Completed"]
             r=100
         else:
-            r=-2*self.distance() + 20*(d-self.distance())   
+            r=self.reward(f_now)  
         return next_state,r , done,info
+    
     
     def reach_joint_limit(self):
         #j3 range -0.08 a 3.75  #j2 range -0.07 a -3. #j1 range -1.8 a 1.76
@@ -159,17 +160,11 @@ class Panda_RL(object):
         
         
     
-    def reward(self,d):
-        r_col=0
-        col=False
-        r=0
-        if self.detect_collision()[0]:
-            r_col=-200
-            col=True
-        else:
-            r=-self.distance()*self.mu_1-r_col            
-        self.d_1=self.distance()
-        return r,col
+    def reward(self,f_now):
+        r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag
+        self.f=f_now
+
+        return r
     
     def reward2(self):        
         r=(math.atan(self.f0-self.fitness())*math.pi/(2*self.fg))*self.m
