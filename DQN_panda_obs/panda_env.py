@@ -110,12 +110,12 @@ class Panda_RL(object):
             r=-100
             done=True
             info=["Done","Collided"]    
-        if self.distance()<0.01:
+        if self.distance()<0.005:
             done=True
             info=["Done","Completed"]
             r=100
         else:
-            r=-2*self.distance() -20*(d-self.distance())   
+            r=-2*self.distance() + 20*(d-self.distance())   
         return next_state,r , done,info
     
     def reach_joint_limit(self):
