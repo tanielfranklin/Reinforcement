@@ -16,6 +16,7 @@ class Panda_RL(object):
         self.panda = rp.models.Panda()
         self.panda_end = rp.models.Panda()
         self.m=100 #magnification factor
+        self.renderize=True
         
         self.obstacle = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(0.3, 0, 0)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
@@ -66,7 +67,8 @@ class Panda_RL(object):
             self.panda.q[1]=round(random.uniform(j1[0],j1[1]),2)
             self.panda.q[3]=round(random.uniform(j2[0],j2[1]),2)
             self.panda.q[5]=round(random.uniform(j3[0],j3[1]),2)
-            self.scene.step()
+            if self.renderize:
+                self.scene.step()
             collision,_=self.detect_collision()
             
             
@@ -98,7 +100,8 @@ class Panda_RL(object):
         self.panda.q[1]+=a[0]*self.delta
         self.panda.q[3]+=a[1]*self.delta
         self.panda.q[5]+=a[2]*self.delta
-        self.scene.step()
+        if self.renderize:
+            self.scene.step()
         next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
         info=["",""]
         done =False
