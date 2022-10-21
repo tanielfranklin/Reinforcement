@@ -163,11 +163,11 @@ class Panda_RL(object):
     def reward(self,f_now):
         r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag
         self.f=f_now
-
         return r
     
-    def reward2(self):        
-        r=(math.atan(self.f0-self.fitness())*math.pi/(2*self.fg))*self.m
+    def reward2(self):
+        # -2 reward for each additional step     
+        r=(math.atan(self.f0-self.fitness())*math.pi/(2*self.fg))*self.m -2
         return r       
         
     def fitness(self):
