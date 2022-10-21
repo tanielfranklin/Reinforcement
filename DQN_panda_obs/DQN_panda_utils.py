@@ -218,3 +218,47 @@ def display_animation(filepath):
     return HTML(data='''<video alt="test" controls>
                 <source src="data:video/mp4;base64,{0}" type="video/mp4" />
                  </video>'''.format(encoded.decode('ascii')))
+    
+def compute_td_loss_priority_replay(agent, target_network, replay_buffer,
+                                    states, actions, rewards, next_states, done_flags, weights, buffer_idxs,
+                                    gamma=0.99, device=device):
+
+    # convert numpy array to torch tensors
+    states = torch.tensor(states, device=device, dtype=torch.float)
+    actions = torch.tensor(actions, device=device, dtype=torch.long)
+    rewards = torch.tensor(rewards, device=device, dtype=torch.float)
+    next_states = torch.tensor(next_states, device=device, dtype=torch.float)
+    done_flags = torch.tensor(done_flags.astype('float32'),device=device,dtype=torch.float)
+    weights = torch.tensor(weights, device=device, dtype=torch.float)
+
+    # get q-values for all actions in current states
+    # use agent network
+    predicted_qvalues = agent(states)
+
+    # compute q-values for all actions in next states
+    # use target network
+    predicted_next_qvalues = target_network(next_states)
+    
+    # select q-values for chosen actions
+    predicted_qvalues_for_actions = predicted_qvalues[range(
+        len(actions)), actions]
+
+    # compute Qmax(next_states, actions) using predicted next q-values
+    next_state_values,_ = torch.max(predicted_next_qvalues, dim=1)
+
+    # compute "target q-values" 
+    target_qvalues_for_actions = rewards + gamma * next_state_values * (1-done_flags)
+    
+    #compute each sample TD error
+    loss = ((predicted_qvalues_for_actions - target_qvalues_for_actions.detach()) ** 2) * weights
+    
+    # mean squared error loss to minimize
+    loss = loss.mean()
+    
+    # calculate new priorities and update buffer
+    with torch.no_grad():
+        new_priorities = predicted_qvalues_for_actions.detach() - target_qvalues_for_actions.detach()
+        new_priorities = np.absolute(new_priorities.detach().numpy())
+        replay_buffer.update_priorities(buffer_idxs, new_priorities)
+        
+    return loss

@@ -43,3 +43,8 @@ class PrioritizedReplayBuffer:
         
     def update_priorities(self, idxs, new_priorities):
         self.priorities[idxs] = new_priorities+self.epsilon
+        
+        
+        
+        
+        
