@@ -9,6 +9,7 @@ import base64
 from IPython.display import HTML
 
 
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -262,3 +263,6 @@ def compute_td_loss_priority_replay(agent, target_network, replay_buffer,
         replay_buffer.update_priorities(buffer_idxs, new_priorities)
         
     return loss
+
+
+
