@@ -258,7 +258,7 @@ def compute_td_loss_priority_replay(agent, target_network, replay_buffer,
     # calculate new priorities and update buffer
     with torch.no_grad():
         new_priorities = predicted_qvalues_for_actions.detach() - target_qvalues_for_actions.detach()
-        new_priorities = np.absolute(new_priorities.detach().numpy())
+        new_priorities = np.absolute(new_priorities.detach().cpu().numpy())
         replay_buffer.update_priorities(buffer_idxs, new_priorities)
         
     return loss

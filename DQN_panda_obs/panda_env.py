@@ -15,7 +15,7 @@ class Panda_RL(object):
         self.scene.launch(realtime=True)
         self.panda = rp.models.Panda()
         self.panda_end = rp.models.Panda()
-        self.mag=100 #magnification factor
+        self.mag=10 #magnification factor
         self.renderize=True
         self.obstacle = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(0.3, 0, 0)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
@@ -87,9 +87,6 @@ class Panda_RL(object):
             if self.renderize:
                 self.scene.step()
             collision,_=self.detect_collision()
-            
-            
-                
         
         return np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
         
@@ -132,7 +129,7 @@ class Panda_RL(object):
             info=["Done","Completed"]
             r=500
         else:
-            r=self.reward(f_now)  
+            r=self.reward2(f_now)  
         return next_state,r , done,info
     
     
@@ -165,9 +162,10 @@ class Panda_RL(object):
         self.f=f_now
         return r
     
-    def reward2(self):
+    def reward2(self,f_now):
         # -2 reward for each additional step     
-        r=(math.atan(self.f0-self.fitness())*math.pi/(2*self.fg))*self.m -2
+        r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag -5
+        self.f=f_now
         return r       
         
     def fitness(self):
