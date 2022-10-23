@@ -19,15 +19,17 @@ class Panda_RL(object):
         self.panda_end = rp.models.Panda()
         self.mag=10 #magnification factor
         self.renderize=True
-        self.obstacle = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(0.3, 0, 0)) 
+        self.obstacle = Cuboid([0.2, 0.2, 0.4], pose=sm.SE3(0.3, 0, 0.2)) 
+        self.obstacle2 = Cuboid([0.2, 0.2, 0.3], pose=sm.SE3(0.3, 0, 1)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
         self.obs_floor = Cuboid([2., 2., 0.01], pose=sm.SE3(0, 0, 0), color=[100,100,100,0])#"black") #color=[100,100,100,0]
         self.scene.add(self.obs_floor)
         self.scene.add(self.obstacle)
+        self.scene.add(self.obstacle2)
         self.scene.add(self.panda, robot_alpha=0.6)
         self.delta=delta
         #End joints positions
-        j=[0.8,-1.5,1] 
+        j=[0.84,-0.25,3.7] 
         self.q_goal=[0., j[0], 0.,j[1], 0., j[2], 0.]
         self.set_goal()
         self.fg=0.001 
@@ -153,10 +155,12 @@ class Panda_RL(object):
             
     def detect_collision(self):
         collision = [self.panda.links[i].collided(self.obstacle) for i in range(9)]
+        collision2 = [self.panda.links[i].collided(self.obstacle2) for i in range(9)]
+        
         # Discarding collisions among first and second links with the floor
         collision_floor = [self.panda.links[i].collided(self.obs_floor) for i in np.arange(2,9)]
         collision.append(self.reach_joint_limit()[0])
-        if sum(collision)+sum(collision_floor)!=0:
+        if sum(collision+collision2+collision_floor)!=0:
             return True, [collision, collision_floor]
         else:
             return False, [collision, collision_floor]         
@@ -169,7 +173,7 @@ class Panda_RL(object):
         return r
     
     def reward2(self,f_now):
-        # -2 reward for each additional step     
+        # -5 reward for each additional step     
         r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag -5
         self.f=f_now
         return r       
