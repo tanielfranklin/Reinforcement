@@ -15,12 +15,15 @@ class Panda_RL(object):
         self.scene = swift.Swift()
         self.scene.launch(realtime=True)
         self.panda = rp.models.Panda()
+        self.step_penalty=-5
+        self.collision_penalty=-20
+        self.bonus_complete=1000
         
         self.panda_end = rp.models.Panda()
         self.mag=10 #magnification factor
         self.renderize=True
         self.obstacle = Cuboid([0.2, 0.2, 0.4], pose=sm.SE3(0.3, 0, 0.2)) 
-        self.obstacle2 = Cuboid([0.2, 0.2, 0.3], pose=sm.SE3(0.3, 0, 1)) 
+        self.obstacle2 = Cuboid([0.2, 0.2, 0.3], pose=sm.SE3(0.3, 0, 1.2)) 
         #self.floor = Cuboid([0.2, 0.2, 0.8], pose=sm.SE3(-0.2, 0, 0)) 
         self.obs_floor = Cuboid([2., 2., 0.01], pose=sm.SE3(0, 0, 0), color=[100,100,100,0])#"black") #color=[100,100,100,0]
         self.scene.add(self.obs_floor)
@@ -129,15 +132,17 @@ class Panda_RL(object):
         if self.detect_collision()[0]:
             # next_state=s
             # next_state=np.array([self.panda.q[1],self.panda.q[3],self.panda.q[5]])
-            r=-500
+            r=self.collision_penalty
+            
             done=True
             info=["Done","Collided"]    
         if f_now<self.fg:
             done=True
             info=["Done","Completed"]
-            r=500
+            r=self.bonus_complete
         else:
-            r=self.reward2(f_now)  
+            r=self.reward2(f_now)
+        self.f=f_now  
         return next_state,r , done,info
     
     
@@ -169,13 +174,13 @@ class Panda_RL(object):
     
     def reward(self,f_now):
         r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag
-        self.f=f_now
+        
         return r
     
     def reward2(self,f_now):
         # -5 reward for each additional step     
-        r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag -5
-        self.f=f_now
+        r=math.atan((self.f-f_now)*math.pi/2*1/self.fg)*self.mag + self.step_penalty
+        
         return r       
         
     def fitness(self):
